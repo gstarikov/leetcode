@@ -12,3 +12,55 @@ it's easy to see why we shouldn't take it - but how are we supposed to design
 an algorithm that can always make the correct decision with huge inputs?
 Imagine if nums contained 10,00010,00010,000 numbers instead.
 */
+
+func LongestIncSeq(seq []int) int {
+	if len(seq) == 0 {
+		return 0
+	}
+	return longestIncSeq(seq, seq[0]) + 1
+}
+
+func getBackSplitPoint(seq []int, searchVal, idx int) int {
+	for j := idx; j >= 0; j-- {
+		if seq[j] < searchVal {
+			return j
+		}
+	}
+	return 0
+}
+
+func longestIncSeq(seq []int, lastSeqVal int) int {
+	/*
+		linear go throuth all elements
+		run a different branch in case of decrease
+	*/
+	seqLen := 0
+	for i := 0; i < len(seq); i++ {
+		//check two things
+		//  what will be in case of skip prev sequence
+		//  and what will be in case of ignore that drop down
+		seqVal := seq[i]
+		switch {
+		case seqVal < lastSeqVal:
+			// do back search for split point
+			idx := getBackSplitPoint(seq, seq[i], i)
+			shiftBack := i - idx
+			firstSeqLen := seqLen - shiftBack
+			rollBackSeqLen := longestIncSeq(seq[i:], seq[idx]) + firstSeqLen
+			straitSeqLen := seqLen
+			if len(seq) > i+1 {
+				straitSeqLen += longestIncSeq(seq[i+1:], lastSeqVal)
+			}
+			if rollBackSeqLen > straitSeqLen {
+				return rollBackSeqLen
+			} else {
+				return straitSeqLen
+			}
+		case seqVal == lastSeqVal: // ignore
+		default:
+			lastSeqVal = seqVal
+			seqLen++
+		}
+	}
+	return seqLen
+}
