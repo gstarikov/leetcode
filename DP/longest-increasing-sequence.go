@@ -29,7 +29,7 @@ func getBackSplitPoint(seq []int, searchVal, idx int) int {
 	return 0
 }
 
-func longestIncSeq(seq []int, lastSeqVal int) int {
+func longestIncSeq(seq []int, lastSeqVal int) int { // ToDo: remove redundant calls
 	/*
 		linear go throuth all elements
 		run a different branch in case of decrease

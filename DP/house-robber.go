@@ -9,13 +9,13 @@ and it will automatically contact the police if two adjacent houses were broken 
 Given an integer array nums representing the amount of money of each house, return the maximum amount of money you can rob tonight without alerting the police.
 */
 
-func HouseRobber(houses []int) RobVec {
+func HouseRobber(houses []int) int {
 	rv0 := houseRobber(houses, 0)
 	rv1 := houseRobber(houses, 1)
 	if rv1.sum > rv0.sum && len(rv1.sequence) > 0 {
-		return rv1
+		return rv1.sum
 	}
-	return rv0
+	return rv0.sum
 }
 
 type RobVec struct {
@@ -38,7 +38,7 @@ func houseRobber(houses []int, start int) RobVec {
 	res := [2]RobVec{}
 	retIxd := 0
 	for i := range res {
-		hr := houseRobber(houses, start+2+i)
+		hr := houseRobber(houses, start+2+i)                   //ToDo : remove redundant calculations
 		res[i].sequence = append([]int{start}, hr.sequence...) // too many memcpy. its better to append to the end and sort of finish
 		res[i].sum = houses[start] + hr.sum
 
