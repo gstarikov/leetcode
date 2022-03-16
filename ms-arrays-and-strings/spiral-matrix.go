@@ -30,9 +30,9 @@ func SpiralOrder(matrix [][]int) []int {
 		matrix[i][j] = visited
 		nextI, nextJ := i+iStep, j+jStep
 		//check for turn
-		if nextI == len(matrix) ||
-			nextJ == len(matrix[0]) ||
-			nextI < 0 ||
+		if nextI == len(matrix) || // эти проверки срабатывают только в первый раз, а потом по виртуальным стенам идём
+			nextJ == len(matrix[0]) || // наверное стоит сделать "двигающиеся стены
+			nextI < 0 || // и исходя из направления движения проверять только нужный указатель
 			nextJ < 0 ||
 			matrix[nextI][nextJ] == visited {
 			//its time to turn right
