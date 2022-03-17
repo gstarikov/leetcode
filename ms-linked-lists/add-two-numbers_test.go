@@ -36,7 +36,7 @@ func TestAddTwoNumbers(t *testing.T) {
 }
 
 func listToSlice(l *ListNode) []int {
-	var ret []int
+	ret := []int{}
 	for ; l != nil; l = l.Next {
 		ret = append(ret, l.Val)
 	}
