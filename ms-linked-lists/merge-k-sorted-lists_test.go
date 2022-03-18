@@ -10,7 +10,7 @@ func TestMergeTwoLists2(t *testing.T) {
 		in  [][]int
 		out []int
 	}{
-		{
+		{ //0
 			in: [][]int{
 				{1, 4, 5},
 				{1, 3, 4},
@@ -18,15 +18,15 @@ func TestMergeTwoLists2(t *testing.T) {
 			},
 			out: []int{1, 1, 2, 3, 4, 4, 5, 6},
 		},
-		{
+		{ //1
 			in:  [][]int{},
 			out: []int{},
 		},
-		{
+		{ //2
 			in:  [][]int{{}},
 			out: []int{},
 		},
-		{
+		{ //3
 			in: [][]int{
 				{1, 2, 2},
 				{1, 1, 2},
@@ -40,7 +40,7 @@ func TestMergeTwoLists2(t *testing.T) {
 		for _, v := range test.in {
 			in = append(in, makeList(v))
 		}
-		res := MergeKLists(in)
+		res := MergeKLists2(in)
 		resArr := listToSlice(res)
 		assert.Equalf(t, test.out, resArr, "case(%d)", i)
 	}

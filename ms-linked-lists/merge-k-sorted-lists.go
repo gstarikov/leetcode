@@ -51,20 +51,19 @@ func chooseMin(lists []*ListNode) *ListNode {
 	return ret
 }
 
-/*
-unsuccesfull try to speedup
-
+// unsuccesfull try to speedup
+func MergeKLists2(lists []*ListNode) *ListNode {
 	if len(lists) == 0 {
 		return nil
 	}
 	//chose head
-	ret, last, minNext := chooseMin(lists, math.MaxInt64)
+	ret, last := chooseMin2(lists)
 
 	//run over lists and relink it
 	for ptr := last; ptr != nil; {
 		//scan for min elem
 		var tmp *ListNode
-		tmp, last, minNext = chooseMin(lists, minNext)
+		tmp, last = chooseMin2(lists)
 		ptr.Next = tmp
 		ptr = last
 	}
@@ -72,9 +71,10 @@ unsuccesfull try to speedup
 	return ret
 }
 
-func chooseMin(lists []*ListNode, min int) (first, last *ListNode, minFromGreater int) {
+func chooseMin2(lists []*ListNode) (first, last *ListNode) {
 	// надо получить минимальный из больших
-	minFromGreater = min
+	minFromGreater := math.MaxInt64
+	min := math.MaxInt64
 	var tmpHead **ListNode
 	for i := range lists {
 		elem := &lists[i]
@@ -82,26 +82,30 @@ func chooseMin(lists []*ListNode, min int) (first, last *ListNode, minFromGreate
 			continue
 		}
 		v := (*elem).Val
-		if v < min {
+		switch {
+		case v < min:
 			minFromGreater = min
 			min = (*elem).Val
 			tmpHead = elem
-
+		case v == min: //there is two same val chains
+			minFromGreater = min
+		case v > min && v < minFromGreater:
+			minFromGreater = v
 		}
 	}
 	if tmpHead == nil { //all are nil
-		return nil, nil, minFromGreater
+		return nil, nil
 	}
 	first = *tmpHead           //i have found elem, so it cant be nil
 	*tmpHead = (*tmpHead).Next //remove added elem
 	last = first
 
-	// add elems until they are less that. it is apeed ontimizatoin to avoid useless min scanning in case of subsequence
-	for ; *tmpHead != nil && (*tmpHead).Val <= minFromGreater; *tmpHead = (*tmpHead).Next {
-		last = *tmpHead
+	// add elems until they are less that. it is speed optimization to avoid useless min scanning in case of subsequence
+	tmpPtr := *tmpHead
+	for ; tmpPtr != nil && tmpPtr.Val <= minFromGreater; tmpPtr = tmpPtr.Next {
+		last = tmpPtr
 	}
+	*tmpHead = last.Next
 
-	return first, last, minFromGreater
+	return first, last
 }
-
-*/
