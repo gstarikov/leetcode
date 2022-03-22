@@ -31,13 +31,14 @@ Constraints:
 */
 
 func FindWords(board [][]byte, words []string) []string {
-	ret := []string{}
+	prefixTree := Constructor()
+
+	// build prefix tree
 	for _, word := range words { //take a word
-		//check word and add to ret in case of there is on board
-		if checkBoard(board, word) {
-			ret = append(ret, word)
-		}
+		prefixTree.Insert(word)
 	}
+
+	ret := checkBoard(board, prefixTree)
 	return ret
 }
 
@@ -49,44 +50,55 @@ func cloneBoard(board [][]byte) [][]byte {
 	return ret
 }
 
-func checkBoard(board [][]byte, words string) bool {
+func checkBoard(board [][]byte, words Trie) []string {
 	//take first symbol and try to find it in board
 	mi := len(board)
 	mj := len(board[0])
-	symbol := words[0]
+	ret := []string{}
 	for i := 0; i < mi; i++ {
 		for j := 0; j < mj; j++ {
-			if board[i][j] == symbol {
-				//do recursive search
-				ok := checkRecursive(board, i, j, words)
-				if ok {
-					return true //there is no requirement to report how many instances of one word are on board
-				}
-			}
+			//do recursive search
+			arr := words.checkRecursive(board, i, j, "", words.node)
+			ret = append(ret, arr...)
 		}
 	}
-	return false
-}
-
-func checkRecursive(board [][]byte, i, j int, chunk string) bool {
-	if i < 0 || j < 0 || i >= len(board) || j >= len(board[0]) || board[i][j] != chunk[0] {
-		return false
-	}
-	if len(chunk) == 1 { //do in this manner to avoid excessive recursive call (params pass & etc)
-		return true
-	}
-	//clone board
-	board = cloneBoard(board) //very expensive. but i dont know how to reduce cost
-
-	chunk = chunk[1:]
-	const visitMark = 0
-	board[i][j] = visitMark
-	ret := checkRecursive(board, i-1, j, chunk) ||
-		checkRecursive(board, i+1, j, chunk) ||
-		checkRecursive(board, i, j-1, chunk) ||
-		checkRecursive(board, i, j+1, chunk)
 	return ret
 }
+
+func (this *Trie) checkRecursive(board [][]byte, i, j int, prefix string, node *PrefixTreeNode) (ret []string) {
+	if i < 0 || j < 0 || i >= len(board) || j >= len(board[0]) {
+		return nil
+	}
+
+	symbol := board[i][j]
+	prefix += string(symbol)
+
+	finish, next := getNextNode(symbol, node)
+	if finish {
+		ret = append(ret, prefix)
+		// remove word from tree
+		this.Remove(prefix)
+	}
+	if next == nil {
+		return
+	}
+
+	//clone board
+	//board = cloneBoard(board) //very expensive. but i dont know how to reduce cost
+	const visitMark = 0
+	board[i][j] = visitMark
+
+	ret = append(ret, this.checkRecursive(board, i-1, j, prefix, next)...)
+	ret = append(ret, this.checkRecursive(board, i+1, j, prefix, next)...)
+	ret = append(ret, this.checkRecursive(board, i, j-1, prefix, next)...)
+	ret = append(ret, this.checkRecursive(board, i, j+1, prefix, next)...)
+
+	board[i][j] = symbol //restore original symbol
+
+	return ret
+}
+
+// todo: do refactor - DRY
 
 // compact prefix tree is bad because we going symbol by symbol
 type PrefixTreeNode struct {
@@ -94,7 +106,7 @@ type PrefixTreeNode struct {
 }
 
 type PrefixTreeElem struct {
-	prefix byte
+	prefix byte //high bit is used as word end tag
 	node   *PrefixTreeNode
 }
 
@@ -144,6 +156,106 @@ func (this *Trie) Insert(word string) {
 			node.elems[pos].node = &PrefixTreeNode{}
 		}
 		node = node.elems[pos].node
+	}
+}
+
+func (this *Trie) Remove(word string) bool {
+	node := this.node
+	var pos int
+	var last *PrefixTreeElem
+	for i := range word {
+		char := word[i]
+		pos = sort.Search(len(node.elems), func(i int) bool {
+			return (node.elems[i].prefix & ^completeWordTag) >= char
+		})
+		switch {
+		case pos == len(node.elems), //not found at all
+			(node.elems[pos].prefix & ^completeWordTag) != char:
+			return false
+		default:
+			last = &node.elems[pos]
+			node = node.elems[pos].node
+		}
+	}
+	last.prefix &= ^completeWordTag
+
+	// real remove isnt necessary because our code is one shot. its not necessary to free memory
+	//two cases
+	// word is prefix for other words => so we remove only tag
+	// word is not prefix, so we remove
+	/*	type idxPos struct {
+			idx int
+			ptr *PrefixTreeNode
+		}
+		stack := make([]idxPos, 0, len(word))
+		node := this.node
+		for i := range word {
+			char := word[i]
+			pos := sort.Search(len(node.elems), func(i int) bool {
+				return (node.elems[i].prefix & ^completeWordTag) >= char
+			})
+			switch {
+			case pos == len(node.elems), //not found at all
+				(node.elems[pos].prefix & ^completeWordTag) != char:
+				return false
+			default:
+				stack = append(stack, idxPos{
+					idx: pos,
+					ptr: node,
+				})
+				node = node.elems[pos].node
+			}
+		}
+		mayDelete := node == nil
+		if !mayDelete { //only remove tag
+			last := stack[len(stack)-1]
+			last.ptr.elems[last.idx].prefix &= ^completeWordTag
+		} else { //remove elems
+			//remove tag from last
+			{
+				elem := stack[len(stack)-1]
+				elem.ptr.elems[elem.idx].prefix &= ^completeWordTag
+			}
+
+			for i := len(stack) - 1; i >= 0; i-- {
+				elem := stack[i]
+				//clean empty sub-arrays
+				if elem.ptr.elems[elem.idx].node != nil &&
+					elem.ptr.elems[elem.idx].node.elems != nil &&
+					len(elem.ptr.elems[elem.idx].node.elems) == 0 {
+					elem.ptr.elems[elem.idx].node.elems = nil
+				}
+				switch {
+				case len(elem.ptr.elems) == 0:
+				case elem.ptr.elems[elem.idx].node != nil && len(elem.ptr.elems[elem.idx].node.elems) > 0: //its is path to other words
+					return true //nothing to remove its time to stop
+				case elem.ptr.elems[elem.idx].prefix&completeWordTag != 0: //time to stop because other word ends here
+					return true
+				case elem.idx == 0: //first one
+					elem.ptr.elems = elem.ptr.elems[1:]
+				case elem.idx == len(elem.ptr.elems)-1: //last one
+					elem.ptr.elems = elem.ptr.elems[0:elem.idx]
+				default: //somevere in the middle
+					copy(elem.ptr.elems[elem.idx:], elem.ptr.elems[elem.idx-1:len(elem.ptr.elems)-1])
+					elem.ptr.elems = elem.ptr.elems[0 : len(elem.ptr.elems)-1]
+				}
+			}
+		}*/
+	return true
+}
+
+func getNextNode(char byte, node *PrefixTreeNode) (wordComplete bool, next *PrefixTreeNode) { //DRY
+	pos := sort.Search(len(node.elems), func(i int) bool {
+		return (node.elems[i].prefix & ^completeWordTag) >= char
+	})
+	switch {
+	case pos == len(node.elems), //not found at all
+		(node.elems[pos].prefix & ^completeWordTag) != char:
+		return false, nil
+	default:
+		wordComplete = (node.elems[pos].prefix & completeWordTag) == completeWordTag
+		next = node.elems[pos].node
+		return
 	}
 }
 
