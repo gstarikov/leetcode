@@ -1,4 +1,4 @@
-package backtraking
+package ms_backtraking
 
 import (
 	"github.com/stretchr/testify/assert"
