@@ -20,7 +20,6 @@ type testOp struct {
 }
 
 func TestLRUCache(t *testing.T) {
-	const capacity = 2
 	tests := []struct {
 		capacity int
 		ops      []testOp
