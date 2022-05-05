@@ -36,7 +36,7 @@ func TestSolution(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		f := solution(func(a int, b int) bool {
+		f := solutionMy(func(a int, b int) bool {
 			return test.graph[a][b] == 1
 		})
 		out := f(len(test.graph))
