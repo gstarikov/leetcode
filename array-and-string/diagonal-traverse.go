@@ -60,103 +60,126 @@ func findDiagonalOrder(mat [][]int) []int {
 		return ret
 	}
 
-	//ToDo: replace traverse to -- && ++ operations instead of calculations
-
 	//case 1
 	m := helperMin(mx, my)
 	for i := 0; i < m; i++ {
 		dir = !dir
 		if dir { //like loop enrolling
-			for j := 0; j <= i; j++ {
-				x, y := j, i-j
+			x, y := 0, i
+			for j := i + 1; j != 0; j-- { //loop to zero require one less register
 				addElem(x, y)
+				x++
+				y--
 			}
 		} else {
-			for j := i; j >= 0; j-- {
-				x, y := j, i-j
+			x, y := i, 0
+			for j := i + 1; j != 0; j-- {
 				addElem(x, y)
+				x--
+				y++
 			}
 		}
 	}
 
 	//case 2
 	switch {
-	case mx < my:
+	case mx < my: //ok
 		for i := mx; i < my; i++ {
 			dir = !dir
 			if dir {
-				for j := 0; j < mx; j++ {
-					x, y := j, i-j
+				x, y := 0, i
+				for j := mx; j != 0; j-- {
 					addElem(x, y)
+					x++
+					y--
 				}
 			} else {
-				for j := mx; j >= 0; j-- {
-					x, y := j, i-j
+				x, y := mx-1, i-mx+1
+				for j := mx; j != 0; j-- {
 					addElem(x, y)
+					x--
+					y++
 				}
 			}
 		}
-	case mx > my:
+	case mx > my: //ok
 		for i := my; i < mx; i++ {
 			dir = !dir
 			if dir {
-				for j := my - 1; j >= 0; j-- {
-					x, y := i-j, j
+				x, y := i-my+1, my-1
+				for j := my; j != 0; j-- {
 					addElem(x, y)
+					x++
+					y--
 				}
 			} else {
-				for j := 0; j < my; j++ {
-					x, y := i-j, j
+				x, y := i, 0
+				for j := my; j != 0; j-- {
 					addElem(x, y)
+					x--
+					y++
 				}
 			}
 		}
 	}
 
 	//case 3
+	//ToDo: лажа какая то с индексами Х и У
 	switch {
-	case mx < my:
-		for i := my - mx + 1; i < my; i++ {
+	case mx < my: //ok
+		for i := mx - 1; i != 0; i-- {
 			dir = !dir
 			if dir {
-				for j := i; j < my; j++ {
-					x, y := mx-(j-i)-1, j
+				x, y := mx-i, my-1
+				for j := i; j != 0; j-- {
 					addElem(x, y)
+					x++
+					y--
 				}
 			} else {
-				for j := i; j < my; j++ {
-					x, y := mx-(my-j), my-(j-i)-1
+				x, y := mx-1, my-i
+				for j := i; j != 0; j-- {
 					addElem(x, y)
+					x--
+					y++
 				}
 			}
 		}
-	case mx == my:
+	case mx == my: //ok
 		for i := 1; i < mx; i++ {
 			dir = !dir
 			if dir {
-				for j := i; j < mx; j++ {
-					x, y := j, mx-j //something wrong
+				x, y := i, mx-1
+				for j := mx - i; j != 0; j-- {
 					addElem(x, y)
+					x++
+					y--
 				}
 			} else {
-				for j := i; j < mx; j++ {
-					x, y := mx-j, j
+				x, y := mx-1, i
+				for j := mx - i; j != 0; j-- {
 					addElem(x, y)
+					x--
+					y++
 				}
 			}
 		}
-	case mx > my:
-		for i := mx - my + 1; i < mx; i++ {
+	case mx > my: //ok
+		for i := my - 1; i != 0; i-- {
 			dir = !dir
 			if dir {
-				for j := i; j < mx; j++ {
-					x, y := j, my-(j-i)-1
+				x, y := mx-i, my-1
+				for j := i; j != 0; j-- {
 					addElem(x, y)
+					x++
+					y--
 				}
 			} else {
-				for j := i; j < mx; j++ {
-					x, y := mx-(j-i)-1, my-(mx-j)
+				x, y := mx-1, my-i
+				for j := i; j != 0; j-- {
 					addElem(x, y)
+					x--
+					y++
 				}
 			}
 		}
